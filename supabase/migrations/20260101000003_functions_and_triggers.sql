@@ -204,7 +204,7 @@ begin
     perform cron.schedule(
       'evolve-generate-monthly-payments',
       '0 3 1 * *',
-      $$select public.generate_monthly_payments();$$
+      $cron$select public.generate_monthly_payments();$cron$
     );
   end if;
 exception when others then
@@ -228,7 +228,7 @@ begin
     perform cron.schedule(
       'evolve-mark-overdue-payments',
       '0 4 * * *',
-      $$select public.mark_overdue_payments();$$
+      $cron$select public.mark_overdue_payments();$cron$
     );
   end if;
 exception when others then
