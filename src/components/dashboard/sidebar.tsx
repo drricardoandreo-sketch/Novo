@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/pagamentos", label: "Pagamentos", icon: "💳" },
   { href: "/dashboard/turmas", label: "Turmas", icon: "🗓️" },
   { href: "/dashboard/frequencia", label: "Frequência", icon: "✅" },
+  { href: "/dashboard/instrutores", label: "Instrutores", icon: "🧑‍🏫" },
   { href: "/dashboard/conta", label: "Minha conta", icon: "⚙️" },
 ];
 
