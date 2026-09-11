@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserRole } from "@/lib/roles";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
   generateMonthlyPaymentsAction,
@@ -13,6 +15,11 @@ function addDays(date: Date, days: number) {
 }
 
 export default async function PagamentosPage() {
+  const role = await getCurrentUserRole();
+  if (role !== "admin") {
+    redirect("/dashboard");
+  }
+
   const supabase = createClient();
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);

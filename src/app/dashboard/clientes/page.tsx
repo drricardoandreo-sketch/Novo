@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserRole } from "@/lib/roles";
 import { CLIENT_STATUS_LABEL, type ClientStatus } from "@/types/database";
 import { formatCurrency } from "@/lib/format";
 
@@ -15,6 +16,8 @@ export default async function ClientesPage({
   searchParams: { status?: string; q?: string };
 }) {
   const supabase = createClient();
+  const role = await getCurrentUserRole();
+  const isAdmin = role === "admin";
 
   let query = supabase
     .from("clients")
@@ -39,9 +42,11 @@ export default async function ClientesPage({
             {clients?.length ?? 0} cliente(s) encontrados
           </p>
         </div>
-        <Link href="/dashboard/clientes/novo" className="btn-primary">
-          + Novo cliente
-        </Link>
+        {isAdmin && (
+          <Link href="/dashboard/clientes/novo" className="btn-primary">
+            + Novo cliente
+          </Link>
+        )}
       </div>
 
       <form className="flex flex-wrap gap-3">
@@ -69,8 +74,8 @@ export default async function ClientesPage({
             <tr>
               <th className="px-4 py-3">Nome</th>
               <th className="px-4 py-3">WhatsApp</th>
-              <th className="px-4 py-3">Plano</th>
-              <th className="px-4 py-3">Pagamento</th>
+              {isAdmin && <th className="px-4 py-3">Plano</th>}
+              {isAdmin && <th className="px-4 py-3">Pagamento</th>}
               <th className="px-4 py-3">Status</th>
             </tr>
           </thead>
@@ -88,12 +93,16 @@ export default async function ClientesPage({
                 <td className="px-4 py-3 text-gray-600">
                   {client.telefone_whatsapp}
                 </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {formatCurrency(Number(client.valor_plano))}
-                </td>
-                <td className="px-4 py-3 text-gray-600 capitalize">
-                  {client.forma_pagamento}
-                </td>
+                {isAdmin && (
+                  <td className="px-4 py-3 text-gray-600">
+                    {formatCurrency(Number(client.valor_plano))}
+                  </td>
+                )}
+                {isAdmin && (
+                  <td className="px-4 py-3 text-gray-600 capitalize">
+                    {client.forma_pagamento}
+                  </td>
+                )}
                 <td className="px-4 py-3">
                   <span
                     className={`badge ${STATUS_BADGE[client.status as ClientStatus]}`}

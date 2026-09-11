@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserRole } from "@/lib/roles";
 import {
   createInstructorAction,
   toggleInstructorActiveAction,
@@ -11,6 +12,8 @@ export default async function InstrutoresPage({
   searchParams: { error?: string };
 }) {
   const supabase = createClient();
+  const role = await getCurrentUserRole();
+  const isAdmin = role === "admin";
   const { data: instructors } = await supabase
     .from("instructors")
     .select("*")
@@ -32,32 +35,59 @@ export default async function InstrutoresPage({
         </p>
       )}
 
-      <div className="card">
-        <h2 className="mb-4 font-medium text-evolve-900">Novo instrutor</h2>
-        <form action={createInstructorAction} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="sm:col-span-2">
-            <label className="label" htmlFor="nome">
-              Nome
-            </label>
-            <input id="nome" name="nome" required className="input" />
-          </div>
-          <div>
-            <label className="label" htmlFor="telefone">
-              Telefone
-            </label>
-            <input id="telefone" name="telefone" className="input" />
-          </div>
-          <div className="sm:col-span-3">
-            <button type="submit" className="btn-primary">
-              Cadastrar instrutor
-            </button>
-          </div>
-        </form>
-      </div>
+      {isAdmin && (
+        <div className="card">
+          <h2 className="mb-4 font-medium text-evolve-900">Novo instrutor</h2>
+          <form action={createInstructorAction} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="sm:col-span-2">
+              <label className="label" htmlFor="nome">
+                Nome
+              </label>
+              <input id="nome" name="nome" required className="input" />
+            </div>
+            <div>
+              <label className="label" htmlFor="telefone">
+                Telefone
+              </label>
+              <input id="telefone" name="telefone" className="input" />
+            </div>
+            <div className="sm:col-span-3">
+              <button type="submit" className="btn-primary">
+                Cadastrar instrutor
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="space-y-4">
         {(instructors ?? []).map((instructor) => {
           const boundUpdate = updateInstructorAction.bind(null, instructor.id);
+
+          if (!isAdmin) {
+            return (
+              <div
+                key={instructor.id}
+                className="card flex items-center justify-between"
+              >
+                <div>
+                  <p className="font-medium text-evolve-900">{instructor.nome}</p>
+                  <p className="text-xs text-gray-500">
+                    {instructor.telefone ?? "sem telefone"}
+                  </p>
+                </div>
+                <span
+                  className={`badge ${
+                    instructor.ativo
+                      ? "bg-evolve-100 text-evolve-800"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {instructor.ativo ? "Ativo" : "Inativo"}
+                </span>
+              </div>
+            );
+          }
 
           return (
             <div key={instructor.id} className="card space-y-3">

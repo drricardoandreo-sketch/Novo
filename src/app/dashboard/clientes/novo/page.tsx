@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserRole } from "@/lib/roles";
 import { ClientForm } from "@/components/dashboard/client-form";
 import { createClientAction } from "../actions";
 
@@ -7,6 +9,11 @@ export default async function NovoClientePage({
 }: {
   searchParams: { error?: string };
 }) {
+  const role = await getCurrentUserRole();
+  if (role !== "admin") {
+    redirect("/dashboard/clientes");
+  }
+
   const supabase = createClient();
   const { data: instructors } = await supabase
     .from("instructors")

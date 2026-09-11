@@ -3,29 +3,34 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
+import type { UserRole } from "@/lib/roles";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Visão geral", icon: "📊" },
-  { href: "/dashboard/clientes", label: "Clientes", icon: "🧑‍🤝‍🧑" },
-  { href: "/dashboard/pagamentos", label: "Pagamentos", icon: "💳" },
-  { href: "/dashboard/turmas", label: "Turmas", icon: "🗓️" },
-  { href: "/dashboard/frequencia", label: "Frequência", icon: "✅" },
-  { href: "/dashboard/instrutores", label: "Instrutores", icon: "🧑‍🏫" },
-  { href: "/dashboard/conta", label: "Minha conta", icon: "⚙️" },
+  { href: "/dashboard", label: "Visão geral", icon: "📊", adminOnly: false },
+  { href: "/dashboard/clientes", label: "Clientes", icon: "🧑‍🤝‍🧑", adminOnly: false },
+  { href: "/dashboard/pagamentos", label: "Pagamentos", icon: "💳", adminOnly: true },
+  { href: "/dashboard/turmas", label: "Turmas", icon: "🗓️", adminOnly: false },
+  { href: "/dashboard/frequencia", label: "Frequência", icon: "✅", adminOnly: false },
+  { href: "/dashboard/instrutores", label: "Instrutores", icon: "🧑‍🏫", adminOnly: false },
+  { href: "/dashboard/usuarios", label: "Usuários", icon: "🔐", adminOnly: true },
+  { href: "/dashboard/conta", label: "Minha conta", icon: "⚙️", adminOnly: false },
 ];
 
 export function Sidebar({
   userEmail,
+  role,
   open,
   onNavigate,
   onClose,
 }: {
   userEmail?: string | null;
+  role: UserRole | null;
   open: boolean;
   onNavigate: () => void;
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const navItems = NAV_ITEMS.filter((item) => !item.adminOnly || role === "admin");
 
   return (
     <aside
@@ -49,7 +54,7 @@ export function Sidebar({
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"

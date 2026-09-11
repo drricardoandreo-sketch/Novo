@@ -7,14 +7,20 @@ export function ClientForm({
   instructors,
   action,
   error,
+  readOnly = false,
 }: {
   client?: Client;
   instructors: Instructor[];
   action: (formData: FormData) => void;
   error?: string;
+  readOnly?: boolean;
 }) {
   return (
-    <form action={action} className="space-y-6" encType="multipart/form-data">
+    <form
+      action={action}
+      className={`space-y-6 ${readOnly ? "opacity-75" : ""}`}
+      encType="multipart/form-data"
+    >
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
@@ -32,6 +38,7 @@ export function ClientForm({
               id="nome_completo"
               name="nome_completo"
               required
+              disabled={readOnly}
               defaultValue={client?.nome_completo}
               className="input"
             />
@@ -45,6 +52,7 @@ export function ClientForm({
               name="data_nascimento"
               type="date"
               required
+              disabled={readOnly}
               defaultValue={client?.data_nascimento}
               className="input"
             />
@@ -58,6 +66,7 @@ export function ClientForm({
               name="data_entrada"
               type="date"
               required
+              disabled={readOnly}
               defaultValue={
                 client?.data_entrada ?? new Date().toISOString().slice(0, 10)
               }
@@ -72,6 +81,7 @@ export function ClientForm({
               id="telefone_whatsapp"
               name="telefone_whatsapp"
               required
+              disabled={readOnly}
               placeholder="+55 11 91234-5678"
               defaultValue={client?.telefone_whatsapp}
               className="input"
@@ -84,6 +94,7 @@ export function ClientForm({
             <select
               id="status"
               name="status"
+              disabled={readOnly}
               defaultValue={client?.status ?? "ativo"}
               className="input"
             >
@@ -95,6 +106,7 @@ export function ClientForm({
         </div>
       </div>
 
+      {!readOnly && (
       <div className="card space-y-4">
         <h2 className="font-medium text-evolve-900">Plano e pagamento</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -178,6 +190,7 @@ export function ClientForm({
           </div>
         </div>
       </div>
+      )}
 
       <div className="card space-y-4">
         <h2 className="font-medium text-evolve-900">Saúde e documentos</h2>
@@ -189,6 +202,7 @@ export function ClientForm({
             id="observacoes_saude"
             name="observacoes_saude"
             rows={3}
+            disabled={readOnly}
             defaultValue={client?.observacoes_saude ?? ""}
             className="input"
           />
@@ -202,6 +216,7 @@ export function ClientForm({
             name="atestado"
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
+            disabled={readOnly}
             className="input"
           />
           {client?.atestado_url && (
@@ -212,11 +227,13 @@ export function ClientForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-3">
-        <button type="submit" className="btn-primary">
-          {client ? "Salvar alterações" : "Cadastrar cliente"}
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end gap-3">
+          <button type="submit" className="btn-primary">
+            {client ? "Salvar alterações" : "Cadastrar cliente"}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

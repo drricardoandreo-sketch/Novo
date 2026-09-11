@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
+import type { UserRole } from "@/lib/roles";
 
 export function DashboardShell({
   userEmail,
+  role,
   children,
 }: {
   userEmail?: string | null;
+  role: UserRole | null;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -44,6 +47,7 @@ export function DashboardShell({
 
       <Sidebar
         userEmail={userEmail}
+        role={role}
         open={open}
         onNavigate={() => setOpen(false)}
         onClose={() => setOpen(false)}
