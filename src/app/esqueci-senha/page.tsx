@@ -1,19 +1,19 @@
 import Link from "next/link";
-import { login } from "./actions";
+import { requestPasswordResetAction } from "./actions";
 
-export default function LoginPage({
+export default function EsqueciSenhaPage({
   searchParams,
 }: {
-  searchParams: { error?: string; redirectTo?: string };
+  searchParams: { error?: string; success?: string };
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-evolve-950 px-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
         <h1 className="mb-1 text-center text-2xl font-semibold text-evolve-900">
-          Evolve
+          Esqueci minha senha
         </h1>
         <p className="mb-6 text-center text-sm text-gray-500">
-          Painel de gestão do estúdio
+          Informe seu e-mail e enviaremos um link para redefinir sua senha.
         </p>
 
         {searchParams.error && (
@@ -21,8 +21,14 @@ export default function LoginPage({
             {searchParams.error}
           </p>
         )}
+        {searchParams.success && (
+          <p className="mb-4 rounded-lg bg-evolve-50 px-3 py-2 text-sm text-evolve-800">
+            Se esse e-mail estiver cadastrado, você vai receber um link em
+            instantes. Verifique também a caixa de spam.
+          </p>
+        )}
 
-        <form action={login} className="space-y-4">
+        <form action={requestPasswordResetAction} className="space-y-4">
           <div>
             <label className="label" htmlFor="email">
               E-mail
@@ -34,31 +40,16 @@ export default function LoginPage({
               required
               autoComplete="email"
               className="input"
-              placeholder="voce@evolvepilates.com.br"
-            />
-          </div>
-          <div>
-            <label className="label" htmlFor="password">
-              Senha
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="input"
-              placeholder="••••••••"
             />
           </div>
           <button type="submit" className="btn-primary w-full">
-            Entrar
+            Enviar link
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm">
-          <Link href="/esqueci-senha" className="text-evolve-700 hover:underline">
-            Esqueci minha senha
+        <p className="mt-6 text-center text-sm">
+          <Link href="/login" className="text-evolve-700 hover:underline">
+            Voltar para o login
           </Link>
         </p>
       </div>
