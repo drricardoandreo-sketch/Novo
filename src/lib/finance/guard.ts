@@ -1,17 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserRole } from "@/lib/roles";
+import { isPersonalFinanceOwner } from "@/lib/finance/access";
 
 /**
- * Finanças pessoais são só do dono da conta (admin), nunca da equipe do
- * estúdio. Redireciona quem não for admin e garante um user_id pra RLS.
+ * Finanças pessoais são só do dono da conta, nunca da equipe do estúdio
+ * nem de outros admins. Restrito por e-mail, não por role, porque é dado
+ * pessoal — não faz sentido outro admin do estúdio enxergar isso.
  */
 export async function requireFinanceContext() {
-  const role = await getCurrentUserRole();
-  if (role !== "admin") {
-    redirect("/dashboard");
-  }
-
   const supabase = createClient();
   const {
     data: { user },
@@ -19,6 +15,10 @@ export async function requireFinanceContext() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  if (!isPersonalFinanceOwner(user!.email)) {
+    redirect("/dashboard");
   }
 
   return { supabase, userId: user!.id };
