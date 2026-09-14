@@ -25,6 +25,7 @@ src/
       turmas/                  # turmas, capacidade e matrícula
       frequencia/               # check-in e clientes em risco
       pagamentos/               # kanban de vencimentos
+      financas/                 # finanças pessoais do admin (ver seção abaixo)
     api/
       clients/due-soon/         # GET — pagamentos a vencer em X dias
       clients/birthdays-today/  # GET — aniversariantes do dia
@@ -168,3 +169,34 @@ Opcionalmente informe `"data_pagamento": "YYYY-MM-DD"` (padrão: hoje).
 Ver `supabase/migrations/` para o schema completo (tabelas `clients`,
 `instructors`, `classes`, `class_schedules`, `attendance`, `payments`,
 enums, triggers de negócio e RLS).
+
+## Finanças pessoais (`/dashboard/financas`)
+
+Módulo separado do negócio do estúdio, para o admin organizar a própria
+vida financeira: lançamentos de receita/despesa, dívidas com plano de
+quitação (bola de neve / avalanche), metas de reserva e relatórios de
+gastos por categoria. Acesso restrito a usuários com `role = 'admin'`.
+
+- **Tabelas**: `finance_categories`, `finance_transactions`,
+  `finance_debts`, `finance_debt_payments`, `finance_savings_goals`,
+  `finance_savings_contributions` (migration
+  `20260201000001_personal_finance.sql`).
+- **Isolamento por usuário**: todas as tabelas têm `user_id` e RLS
+  `user_id = auth.uid()` — cada admin só vê os próprios dados, mesmo que
+  existam vários no futuro.
+- **Automação embutida no banco**: registrar um pagamento de dívida
+  (`finance_debt_payments`) abate o saldo devedor automaticamente e marca
+  a dívida como quitada ao zerar; registrar um aporte
+  (`finance_savings_contributions`) soma direto no valor atual da meta.
+- **Categorias padrão**: na primeira visita ao módulo, categorias comuns
+  (moradia, alimentação, transporte, dívidas, etc.) são criadas
+  automaticamente para o usuário (`src/lib/finance/categories.ts`).
+- **Páginas**: Resumo (visão geral do mês), Lançamentos (registro rápido
+  de receitas/despesas), Dívidas (cadastro + ordem sugerida de quitação e
+  estimativa de meses para quitar), Metas (reserva/objetivos com
+  progresso) e Relatórios (receitas x despesas dos últimos 6 meses e
+  gastos por categoria).
+
+Não roda migration automaticamente: depois de puxar essas mudanças, rode
+`npx supabase db push` (ou cole o SQL da migration no SQL Editor do
+Supabase) para criar as tabelas antes de acessar `/dashboard/financas`.

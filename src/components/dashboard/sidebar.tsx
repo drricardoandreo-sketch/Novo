@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/frequencia", label: "Frequência", icon: "✅", adminOnly: false },
   { href: "/dashboard/instrutores", label: "Instrutores", icon: "🧑‍🏫", adminOnly: false },
   { href: "/dashboard/usuarios", label: "Usuários", icon: "🔐", adminOnly: true },
+  { href: "/dashboard/financas", label: "Finanças pessoais", icon: "💰", adminOnly: true },
   { href: "/dashboard/conta", label: "Minha conta", icon: "⚙️", adminOnly: false },
 ];
 
