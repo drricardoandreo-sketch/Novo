@@ -200,3 +200,26 @@ gastos por categoria. Acesso restrito a usuários com `role = 'admin'`.
 Não roda migration automaticamente: depois de puxar essas mudanças, rode
 `npx supabase db push` (ou cole o SQL da migration no SQL Editor do
 Supabase) para criar as tabelas antes de acessar `/dashboard/financas`.
+
+### Lançamento rápido via WhatsApp (n8n)
+
+`POST /api/financas/whatsapp` recebe o texto cru de uma mensagem
+("gastei 50 no mercado", "entrou 200 de aula"), interpreta com
+`src/lib/finance/parse-message.ts` e já lança em `finance_transactions`.
+
+- **Autenticação própria**: header `x-api-key: FINANCE_API_KEY` — chave
+  separada da `EVOLVE_API_KEY` do estúdio, nunca aceita sessão de cookie.
+- **Variáveis**: `FINANCE_API_KEY` (gere com `openssl rand -hex 32`) e
+  `FINANCE_OWNER_USER_ID` (seu UUID no Supabase Auth).
+- **Corpo**: `{ "texto": "gastei 50 no mercado" }`
+- **Resposta**: `{ "ok": true, "reply": "Anotado ✅ -R$ 50,00 em Alimentação" }`
+  — o campo `reply` já vem pronto pra responder de volta no WhatsApp.
+
+Fluxo sugerido no n8n:
+1. **Trigger de WhatsApp** (o mesmo provedor já usado nos lembretes do
+   estúdio) recebendo mensagens do seu próprio número.
+2. **Filtro**: processa só mensagens vindas do seu número (evita lançar
+   mensagem de cliente por engano).
+3. **HTTP Request**: `POST` pra esse endpoint com `x-api-key` e
+   `{ "texto": "<mensagem recebida>" }`.
+4. **Resposta no WhatsApp** usando o campo `reply` do retorno.
