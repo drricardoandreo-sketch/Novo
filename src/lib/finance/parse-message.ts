@@ -20,9 +20,15 @@ const DESPESA_CATEGORY_KEYWORDS: [string, string[]][] = [
   ["Educação", ["curso", "livro", "escola", "faculdade"]],
 ];
 
+// Letras (incl. acentuadas) usadas pra simular \b sem cair na armadilha do
+// \b nativo do JS, que não reconhece acento como "caractere de palavra" —
+// sem isso, "gastei" batia com a palavra-chave "gas" (de "gás").
+const WORD_CHARS = "a-zà-öø-ÿ0-9";
+
 function findFirstKeyword(text: string, keywords: string[]): string | null {
   for (const kw of keywords) {
-    if (text.includes(kw)) return kw;
+    const re = new RegExp(`(?<![${WORD_CHARS}])${kw}(?![${WORD_CHARS}])`, "i");
+    if (re.test(text)) return kw;
   }
   return null;
 }
@@ -69,7 +75,7 @@ export function parseFinanceMessage(raw: string): ParsedFinanceMessage | { error
       }
     }
   } else {
-    categoria = text.includes("sal") ? "Salário" : "Renda extra";
+    categoria = findFirstKeyword(text, ["salário", "salario"]) ? "Salário" : "Renda extra";
   }
 
   return { tipo, valor, categoria, descricao };
