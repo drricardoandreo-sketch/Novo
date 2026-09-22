@@ -25,6 +25,7 @@ src/
       turmas/                  # turmas, capacidade e matrícula
       frequencia/               # check-in e clientes em risco
       pagamentos/               # kanban de vencimentos
+      financas/                 # finanças pessoais do admin (ver seção abaixo)
     api/
       clients/due-soon/         # GET — pagamentos a vencer em X dias
       clients/birthdays-today/  # GET — aniversariantes do dia
@@ -168,3 +169,57 @@ Opcionalmente informe `"data_pagamento": "YYYY-MM-DD"` (padrão: hoje).
 Ver `supabase/migrations/` para o schema completo (tabelas `clients`,
 `instructors`, `classes`, `class_schedules`, `attendance`, `payments`,
 enums, triggers de negócio e RLS).
+
+## Finanças pessoais (`/dashboard/financas`)
+
+Módulo separado do negócio do estúdio, para o admin organizar a própria
+vida financeira: lançamentos de receita/despesa, dívidas com plano de
+quitação (bola de neve / avalanche), metas de reserva e relatórios de
+gastos por categoria. Acesso restrito a usuários com `role = 'admin'`.
+
+- **Tabelas**: `finance_categories`, `finance_transactions`,
+  `finance_debts`, `finance_debt_payments`, `finance_savings_goals`,
+  `finance_savings_contributions` (migration
+  `20260201000001_personal_finance.sql`).
+- **Isolamento por usuário**: todas as tabelas têm `user_id` e RLS
+  `user_id = auth.uid()` — cada admin só vê os próprios dados, mesmo que
+  existam vários no futuro.
+- **Automação embutida no banco**: registrar um pagamento de dívida
+  (`finance_debt_payments`) abate o saldo devedor automaticamente e marca
+  a dívida como quitada ao zerar; registrar um aporte
+  (`finance_savings_contributions`) soma direto no valor atual da meta.
+- **Categorias padrão**: na primeira visita ao módulo, categorias comuns
+  (moradia, alimentação, transporte, dívidas, etc.) são criadas
+  automaticamente para o usuário (`src/lib/finance/categories.ts`).
+- **Páginas**: Resumo (visão geral do mês), Lançamentos (registro rápido
+  de receitas/despesas), Dívidas (cadastro + ordem sugerida de quitação e
+  estimativa de meses para quitar), Metas (reserva/objetivos com
+  progresso) e Relatórios (receitas x despesas dos últimos 6 meses e
+  gastos por categoria).
+
+Não roda migration automaticamente: depois de puxar essas mudanças, rode
+`npx supabase db push` (ou cole o SQL da migration no SQL Editor do
+Supabase) para criar as tabelas antes de acessar `/dashboard/financas`.
+
+### Lançamento rápido via WhatsApp (n8n)
+
+`POST /api/financas/whatsapp` recebe o texto cru de uma mensagem
+("gastei 50 no mercado", "entrou 200 de aula"), interpreta com
+`src/lib/finance/parse-message.ts` e já lança em `finance_transactions`.
+
+- **Autenticação própria**: header `x-api-key: FINANCE_API_KEY` — chave
+  separada da `EVOLVE_API_KEY` do estúdio, nunca aceita sessão de cookie.
+- **Variáveis**: `FINANCE_API_KEY` (gere com `openssl rand -hex 32`) e
+  `FINANCE_OWNER_USER_ID` (seu UUID no Supabase Auth).
+- **Corpo**: `{ "texto": "gastei 50 no mercado" }`
+- **Resposta**: `{ "ok": true, "reply": "Anotado ✅ -R$ 50,00 em Alimentação" }`
+  — o campo `reply` já vem pronto pra responder de volta no WhatsApp.
+
+Fluxo sugerido no n8n:
+1. **Trigger de WhatsApp** (o mesmo provedor já usado nos lembretes do
+   estúdio) recebendo mensagens do seu próprio número.
+2. **Filtro**: processa só mensagens vindas do seu número (evita lançar
+   mensagem de cliente por engano).
+3. **HTTP Request**: `POST` pra esse endpoint com `x-api-key` e
+   `{ "texto": "<mensagem recebida>" }`.
+4. **Resposta no WhatsApp** usando o campo `reply` do retorno.

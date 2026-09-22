@@ -4,16 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
 import type { UserRole } from "@/lib/roles";
+import { isPersonalFinanceOwner } from "@/lib/finance/access";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Visão geral", icon: "📊", adminOnly: false },
-  { href: "/dashboard/clientes", label: "Clientes", icon: "🧑‍🤝‍🧑", adminOnly: false },
-  { href: "/dashboard/pagamentos", label: "Pagamentos", icon: "💳", adminOnly: true },
-  { href: "/dashboard/turmas", label: "Turmas", icon: "🗓️", adminOnly: false },
-  { href: "/dashboard/frequencia", label: "Frequência", icon: "✅", adminOnly: false },
-  { href: "/dashboard/instrutores", label: "Instrutores", icon: "🧑‍🏫", adminOnly: false },
-  { href: "/dashboard/usuarios", label: "Usuários", icon: "🔐", adminOnly: true },
-  { href: "/dashboard/conta", label: "Minha conta", icon: "⚙️", adminOnly: false },
+  { href: "/dashboard", label: "Visão geral", icon: "📊", adminOnly: false, ownerOnly: false },
+  { href: "/dashboard/clientes", label: "Clientes", icon: "🧑‍🤝‍🧑", adminOnly: false, ownerOnly: false },
+  { href: "/dashboard/pagamentos", label: "Pagamentos", icon: "💳", adminOnly: true, ownerOnly: false },
+  { href: "/dashboard/turmas", label: "Turmas", icon: "🗓️", adminOnly: false, ownerOnly: false },
+  { href: "/dashboard/frequencia", label: "Frequência", icon: "✅", adminOnly: false, ownerOnly: false },
+  { href: "/dashboard/instrutores", label: "Instrutores", icon: "🧑‍🏫", adminOnly: false, ownerOnly: false },
+  { href: "/dashboard/usuarios", label: "Usuários", icon: "🔐", adminOnly: true, ownerOnly: false },
+  { href: "/dashboard/financas", label: "Finanças pessoais", icon: "💰", adminOnly: false, ownerOnly: true },
+  { href: "/dashboard/conta", label: "Minha conta", icon: "⚙️", adminOnly: false, ownerOnly: false },
 ];
 
 export function Sidebar({
@@ -30,7 +32,11 @@ export function Sidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
-  const navItems = NAV_ITEMS.filter((item) => !item.adminOnly || role === "admin");
+  const isOwner = isPersonalFinanceOwner(userEmail);
+  const navItems = NAV_ITEMS.filter((item) => {
+    if (item.ownerOnly) return isOwner;
+    return !item.adminOnly || role === "admin";
+  });
 
   return (
     <aside
